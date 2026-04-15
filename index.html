@@ -4,325 +4,389 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Historica — The Age of Industry Quiz</title>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #1a1008; --parchment: #f5edd6; --parchment-dark: #e8d9b5; --parchment-deeper: #d4c090;
-    --sepia: #8b5e3c; --sepia-light: #c49a6c; --crimson: #8b1a1a; --gold: #c9920a;
-    --gold-light: #e8b84b; --teal-dark: #1a4a4a; --correct: #2d5a2d; --shadow: rgba(26,16,8,0.25);
+    --ink: #1a1008;
+    --parchment: #f5edd6;
+    --parchment-dark: #e8d9b5;
+    --parchment-deeper: #d4c090;
+    --sepia: #8b5e3c;
+    --sepia-light: #c49a6c;
+    --crimson: #8b1a1a;
+    --gold: #c9920a;
+    --gold-light: #e8b84b;
+    --teal-dark: #1a4a4a;
+    --teal: #2d6a6a;
+    --correct: #2d5a2d;
+    --correct-light: #e8f5e8;
+    --wrong: #8b1a1a;
+    --wrong-light: #fde8e8;
+    --shadow: rgba(26,16,8,0.25);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
-    font-family: 'Crimson Pro', serif; background: var(--parchment); color: var(--ink); min-height: 100vh;
-    background-image: radial-gradient(ellipse at 10% 10%, rgba(139,94,60,0.06) 0%, transparent 50%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    font-family: 'Crimson Pro', serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 10% 10%, rgba(139,94,60,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 90%, rgba(139,26,26,0.05) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   }
 
-  .screen { display: none; min-height: 100vh; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
-  .screen.active { display: flex; }
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-  .panel { background: var(--parchment); border: 1px solid var(--parchment-deeper); border-radius: 4px; padding: 2rem; box-shadow: 0 4px 24px var(--shadow); position: relative; max-width: 520px; width: 100%; text-align: center; }
-  .panel::before { content: ''; position: absolute; inset: 6px; border: 1px solid var(--parchment-deeper); pointer-events: none; }
+  .brand { text-align: center; margin-bottom: 2rem; }
+  .brand-rule { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0; }
+  .brand-rule::before, .brand-rule::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, var(--sepia-light), transparent); }
+  .brand-ornament { color: var(--gold); font-size: 1.2rem; }
+  .brand h1 { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 900; color: var(--ink); letter-spacing: -0.01em; line-height: 1; text-shadow: 2px 2px 0 var(--parchment-dark), 4px 4px 8px var(--shadow); }
+  .brand .subtitle { font-family: 'Special Elite', monospace; font-size: 0.9rem; letter-spacing: 0.25em; color: var(--sepia); text-transform: uppercase; margin-top: 0.5rem; }
 
-  .btn { font-family: 'Special Elite', monospace; padding: 0.9rem 1.5rem; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.85rem; width: 100%; margin-bottom: 0.8rem; }
+  .panel { background: var(--parchment); border: 1px solid var(--parchment-deeper); border-radius: 4px; padding: 2rem 2.5rem; box-shadow: 0 4px 24px var(--shadow), inset 0 0 80px rgba(201,146,10,0.03); position: relative; max-width: 520px; width: 90%; }
+  .panel::before { content: ''; position: absolute; inset: 6px; border: 1px solid var(--parchment-deeper); border-radius: 2px; pointer-events: none; }
+
+  .btn { font-family: 'Special Elite', monospace; font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.9rem 2rem; border: none; border-radius: 2px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
   .btn-primary { background: var(--ink); color: var(--parchment); box-shadow: 3px 3px 0 var(--sepia); }
+  .btn-primary:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--sepia); }
   .btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--parchment-deeper); }
+  .btn-lg { font-size: 1rem; padding: 1.1rem 2.5rem; }
+  .btn-full { width: 100%; }
 
-  .input-group { margin-bottom: 1.2rem; width: 100%; text-align: left; }
-  .input-group label { display: block; font-family: 'Special Elite', monospace; font-size: 0.75rem; color: var(--sepia); margin-bottom: 0.5rem; }
-  .input-group input, .input-group select { width: 100%; padding: 0.8rem; background: var(--parchment-dark); border: 1px solid var(--parchment-deeper); font-size: 1rem; }
+  .input-group { margin-bottom: 1.25rem; }
+  .input-group label { display: block; font-family: 'Special Elite', monospace; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sepia); margin-bottom: 0.5rem; }
+  .input-group input { width: 100%; padding: 0.75rem 1rem; background: var(--parchment-dark); border: 1px solid var(--parchment-deeper); border-radius: 2px; font-family: 'Crimson Pro', serif; font-size: 1.1rem; color: var(--ink); outline: none; }
 
-  .room-code-value { font-family: 'Playfair Display', serif; font-size: 3.5rem; color: var(--gold); letter-spacing: 5px; margin: 10px 0; }
-  .player-list { list-style: none; margin: 1.5rem 0; width: 100%; }
-  .player-list li { padding: 0.6rem; border-bottom: 1px solid var(--parchment-dark); display: flex; justify-content: space-between; }
+  .room-code-display { text-align: center; padding: 1.5rem; background: var(--ink); border-radius: 2px; margin: 1rem 0; }
+  .room-code-label { font-family: 'Special Elite', monospace; font-size: 0.75rem; letter-spacing: 0.2em; color: var(--sepia-light); }
+  .room-code-value { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; color: var(--gold-light); letter-spacing: 0.15em; }
 
-  .lobby-settings-info { font-family: 'Special Elite', monospace; font-size: 0.8rem; color: var(--sepia); margin-top: 10px; background: var(--parchment-dark); padding: 10px; border-radius: 4px; }
+  .player-list { list-style: none; margin-top: 0.5rem; }
+  .player-list li { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--parchment-dark); display: flex; align-items: center; gap: 0.75rem; font-size: 1.05rem; }
+  .player-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--sepia); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 700; font-size: 0.85rem; color: var(--parchment); flex-shrink: 0; }
+  .player-host-badge { font-family: 'Special Elite', monospace; font-size: 0.65rem; background: var(--gold); color: var(--ink); padding: 2px 6px; border-radius: 2px; margin-left: auto; }
 
-  #game-screen { justify-content: flex-start; padding-top: 0; }
-  .game-header { background: var(--ink); color: var(--parchment); width: 100%; padding: 1rem; display: flex; justify-content: space-between; border-bottom: 3px solid var(--gold); }
-  .timer-bar-wrap { height: 8px; background: var(--parchment-dark); width: 100%; }
-  .timer-bar { height: 100%; background: var(--gold); width: 100%; }
-  
-  .answer-btn { width: 100%; padding: 1rem; margin-bottom: 10px; border: 1.5px solid var(--parchment-deeper); background: var(--parchment); cursor: pointer; font-family: 'Crimson Pro'; font-weight: bold; text-align: left; }
-  .answer-btn.correct { background: #d4edda !important; border-color: var(--correct); }
-  .answer-btn.wrong { background: #f8d7da !important; border-color: var(--crimson); }
+  #game-screen { padding: 1rem; align-items: stretch; gap: 0; justify-content: flex-start; }
+  .game-header { background: var(--ink); color: var(--parchment); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
+  .game-header-brand { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.1rem; color: var(--gold-light); }
+  .game-progress { font-family: 'Special Elite', monospace; font-size: 0.75rem; color: var(--sepia-light); }
+  .game-score { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.1rem; color: var(--gold-light); }
+
+  .timer-bar-wrap { height: 6px; background: var(--parchment-dark); position: relative; }
+  .timer-bar { height: 100%; background: linear-gradient(to right, var(--gold), var(--crimson)); transition: width 1s linear; width: 100%; }
+
+  .game-body { flex: 1; display: flex; flex-direction: column; max-width: 800px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem; gap: 1.5rem; }
+  .hint-box { background: var(--teal-dark); color: #f5edd6; border-radius: 2px; padding: 1rem 1.25rem; border-left: 4px solid var(--gold); font-style: italic; font-size: 1rem; }
+  .hint-label { font-family: 'Special Elite', monospace; font-style: normal; font-size: 0.7rem; color: var(--gold-light); margin-bottom: 0.4rem; }
+  .question-text { font-family: 'Playfair Display', serif; font-size: clamp(1.3rem, 3vw, 1.75rem); font-weight: 700; text-align: center; }
+
+  .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 500px) { .answers-grid { grid-template-columns: 1fr; } }
+  .answer-btn { font-family: 'Crimson Pro', serif; font-size: 1.05rem; padding: 1rem 1.25rem; border: 1.5px solid var(--parchment-deeper); background: var(--parchment); cursor: pointer; display: flex; gap: 0.75rem; text-align: left; }
+  .answer-btn .answer-letter { font-family: 'Special Elite', monospace; width: 22px; height: 22px; background: var(--ink); color: var(--parchment); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .answer-btn.correct { background: #d4edda; border-color: var(--correct); }
+  .answer-btn.wrong { background: #f8d7da; border-color: var(--crimson); }
+  .answer-btn:disabled { cursor: default; }
+
+  .feedback-overlay { text-align: center; padding: 1rem; border-radius: 2px; font-family: 'Playfair Display', serif; font-weight: 700; display: none; margin-top: 1rem; }
+  .feedback-overlay.show { display: block; }
+  .feedback-overlay.correct-fb { background: #d4edda; color: var(--correct); }
+  .feedback-overlay.wrong-fb { background: #f8d7da; color: var(--crimson); }
+
+  .lb-list { list-style: none; width: 100%; max-width: 480px; }
+  .lb-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--parchment-dark); }
+  .lb-rank { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 1.4rem; width: 36px; color: var(--sepia-light); }
+  .lb-name { flex: 1; font-weight: 600; }
+  .lb-score { font-family: 'Special Elite', monospace; color: var(--sepia); }
+
+  .waiting-pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 1.2s infinite; margin-left: 0.5rem; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .host-banner { background: var(--gold); color: var(--ink); text-align: center; padding: 0.6rem; font-family: 'Special Elite', monospace; font-size: 0.8rem; }
+  .fact-reveal { background: var(--parchment-dark); padding: 1rem; margin-top: 1rem; font-style: italic; }
+  .section-title { font-family: 'Special Elite', monospace; font-size: 0.75rem; letter-spacing: 0.2em; color: var(--sepia); margin-bottom: 0.75rem; }
 </style>
 </head>
 <body>
 
 <div id="home-screen" class="screen active">
+  <div class="brand"><h1>Historica</h1><p class="subtitle">The Age of Industry · 1850–1910</p></div>
   <div class="panel">
-    <h1 style="font-family:'Playfair Display'; font-size: 3rem;">Historica</h1>
-    <button class="btn btn-primary" onclick="showScreen('host-setup-screen')">Host Game</button>
-    <button class="btn btn-secondary" onclick="showScreen('join-screen')">Join with Code</button>
+    <div class="home-actions" style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn btn-primary btn-lg btn-full" onclick="showScreen('host-setup-screen')">Host a Game</button>
+      <button class="btn btn-secondary btn-lg btn-full" onclick="showScreen('join-screen')">Join with Code</button>
+    </div>
   </div>
 </div>
 
 <div id="host-setup-screen" class="screen">
   <div class="panel">
-    <h2>Host Setup</h2>
-    <div class="input-group">
-      <label>Your Name</label>
-      <input type="text" id="host-name-input" placeholder="Professor">
-    </div>
-    <div class="input-group">
-      <label>Time per Question</label>
-      <select id="setting-time">
-        <option value="10">10 Seconds</option>
-        <option value="15">15 Seconds</option>
-        <option value="20" selected>20 Seconds</option>
-        <option value="30">30 Seconds</option>
-      </select>
-    </div>
-    <div class="input-group">
-      <label>Number of Questions</label>
-      <select id="setting-q-count">
-        <option value="5">5 Questions</option>
-        <option value="10" selected>10 Questions</option>
-        <option value="15">15 Questions</option>
-        <option value="20">20 Questions</option>
-        <option value="50">All 50 Questions</option>
-      </select>
-    </div>
-    <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
+    <p class="section-title">Host Setup</p>
+    <div class="input-group"><label>Your Name</label><input type="text" id="host-name-input" placeholder="e.g. Professor Hawthorne"></div>
+    <button class="btn btn-primary btn-full" onclick="createRoom()">Create Room</button>
   </div>
 </div>
 
 <div id="join-screen" class="screen">
   <div class="panel">
-    <h2>Join Game</h2>
-    <div class="input-group"><label>Your Name</label><input type="text" id="join-name-input"></div>
-    <div class="input-group"><label>Room Code</label><input type="text" id="join-code-input" style="text-transform:uppercase"></div>
-    <button class="btn btn-primary" onclick="joinRoom()">Join Chamber</button>
+    <p class="section-title">Join Game</p>
+    <div class="input-group"><label>Your Name</label><input type="text" id="join-name-input" placeholder="e.g. Lady Pemberton"></div>
+    <div class="input-group"><label>Room Code</label><input type="text" id="join-code-input" placeholder="CODE"></div>
+    <button class="btn btn-primary btn-full" onclick="joinRoom()">Join</button>
   </div>
 </div>
 
 <div id="lobby-screen" class="screen">
+  <div class="host-banner">⚑ You are the Host</div>
   <div class="panel">
-    <p>ROOM CODE</p>
-    <div class="room-code-value" id="display-room-code">----</div>
-    <div class="lobby-settings-info" id="lobby-settings-display">
-      Loading settings...
+    <div class="room-code-display">
+      <div class="room-code-label">Room Code</div>
+      <div class="room-code-value" id="display-room-code">—</div>
     </div>
-    <ul id="player-list" class="player-list"></ul>
-    <button id="start-btn" class="btn btn-primary" style="display:none;" onclick="startGame()">Start Quiz</button>
-    <p id="wait-msg">Waiting for Host...</p>
+    <p class="section-title">Players <span class="waiting-pulse"></span></p>
+    <ul class="player-list" id="lobby-player-list"></ul>
+    <button class="btn btn-primary btn-full btn-lg" style="margin-top:1rem;" onclick="startGame()">Begin Quiz</button>
+  </div>
+</div>
+
+<div id="waiting-screen" class="screen">
+  <div class="panel" style="text-align:center;">
+    <p class="section-title">Waiting Room</p>
+    <div class="room-code-display"><div class="room-code-value" id="waiting-room-code">—</div></div>
+    <p>Waiting for host...</p>
+    <ul class="player-list" id="waiting-player-list"></ul>
   </div>
 </div>
 
 <div id="game-screen" class="screen">
-  <div class="game-header"><div id="q-count">Q 1</div><div id="my-score">0 pts</div></div>
+  <div class="game-header">
+    <div class="game-header-brand">Historica</div>
+    <div class="game-progress" id="q-progress">Q 1 / 13</div>
+    <div class="game-score" id="my-score">0 pts</div>
+  </div>
   <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
-  <div style="max-width:600px; width:100%; padding:20px;">
-    <p id="q-text" style="font-size:1.5rem; font-weight:bold; margin-bottom:20px; text-align:center;"></p>
-    <div id="answers-grid"></div>
+  <div class="game-body">
+    <div class="hint-box"><div class="hint-label">📜 Archive Dispatch</div><span id="hint-text"></span></div>
+    <div class="question-text" id="question-text"></div>
+    <div class="answers-grid" id="answers-grid"></div>
+    <div class="feedback-overlay" id="feedback-overlay"></div>
+    <div class="fact-reveal" id="fact-reveal" style="display:none;"></div>
   </div>
 </div>
 
 <div id="leaderboard-screen" class="screen">
-  <div class="panel">
-    <h2>Standings</h2>
-    <ul id="lb-list" class="player-list"></ul>
-    <button id="next-btn" class="btn btn-primary" style="display:none;" onclick="nextQuestion()">Next Question</button>
+  <div class="brand"><h1>Standings</h1></div>
+  <ul class="lb-list" id="lb-list"></ul>
+  <div id="lb-host-controls" style="display:none; width:100%; max-width:480px; margin-top:2rem;">
+    <button class="btn btn-primary btn-full btn-lg" onclick="nextQuestion()">Next Question →</button>
   </div>
 </div>
 
-<script>
-// --- YOUR FIREBASE CONFIG ---
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  databaseURL: "YOUR_DATABASE_URL",
-  projectId: "YOUR_PROJECT_ID"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import { getDatabase, ref, set, onValue, update, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-// --- QUESTIONS ---
-const QUESTIONS = [
-  { q: "Which American Commodore forced Japan to open in 1853?", a: ["Matthew Perry","John Paul Jones","David Farragut","Winfield Scott"], c: 0 },
-  { q: "What was the title of Darwin's 1859 work?", a: ["On the Origin of Species","The Descent of Man","Geology","The Voyage"], c: 0 },
-  { q: "Which fort's bombardment began the Civil War?", a: ["Fort Sumter","Fort McHenry","Fort Donelson","Fort Monroe"], c: 0 },
-  { q: "Who assassinated Abraham Lincoln in 1865?", a: ["John Wilkes Booth","Lee Harvey Oswald","Leon Czolgosz","Charles Guiteau"], c: 0 },
-  { q: "What was completed at Promontory Summit in 1869?", a: ["Transcontinental Railroad","Erie Canal","Panama Canal","Suez Canal"], c: 0 },
-  { q: "Where was the German Empire proclaimed in 1871?", a: ["Palace of Versailles","Berlin Cathedral","The Louvre","The Reichstag"], c: 0 },
-  { q: "Who invented the telephone in 1876?", a: ["Alexander Graham Bell","Thomas Edison","Nikola Tesla","Guglielmo Marconi"], c: 0 },
-  { q: "Which inventor created the practical light bulb in 1879?", a: ["Thomas Edison","Nikola Tesla","Joseph Swan","Humphry Davy"], c: 0 },
-  { q: "In which year was the Statue of Liberty dedicated?", a: ["1886","1876","1896","1906"], c: 0 },
-  { q: "Which artist famously cut off his ear in 1888?", a: ["Vincent van Gogh","Paul Gauguin","Claude Monet","Edvard Munch"], c: 0 },
-  { q: "Where were the first modern Olympics held in 1896?", a: ["Athens","Paris","London","Rome"], c: 0 },
-  { q: "Who made the first powered flight in 1903?", a: ["Wright Brothers","Montgolfier Brothers","Santos-Dumont","Louis Blériot"], c: 0 },
-  { q: "Which city was devastated by an earthquake in 1906?", a: ["San Francisco","Los Angeles","Tokyo","Messina"], c: 0 },
-  { q: "Who discovered Radium and Polonium?", a: ["Marie Curie","Albert Einstein","Isaac Newton","Max Planck"], c: 0 },
-  { q: "What was the main cause of the 1850s Crimean War?", a: ["Religious/Territorial","Slavery","Taxation","Gold"], c: 0 },
-  { q: "Which canal opened in 1869 connecting the Med and Red Seas?", a: ["Suez Canal","Panama Canal","Kiel Canal","Grand Canal"], c: 0 },
-  { q: "Who was the 'Iron Chancellor' of Germany?", a: ["Otto von Bismarck","Wilhelm I","Frederick the Great","Metternich"], c: 0 },
-  { q: "The 1848 'Communist Manifesto' was written by Marx and whom?", a: ["Engels","Lenin","Stalin","Bakunin"], c: 0 },
-  { q: "Which country gifted the Statue of Liberty to the USA?", a: ["France","UK","Spain","Italy"], c: 0 },
-  { q: "What ended the Russo-Japanese War in 1905?", a: ["Treaty of Portsmouth","Treaty of Versailles","Paris Peace","London Treaty"], c: 0 },
-  { q: "Who led the Redshirts in Italian unification?", a: ["Garibaldi","Mazzini","Cavour","Victor Emmanuel"], c: 0 },
-  { q: "What event triggered the US into the Spanish-American War?", a: ["Sinking of the Maine","Zimmerman Note","Sinking of Lusitania","Pearl Harbor"], c: 0 },
-  { q: "Which US President was assassinated in 1881?", a: ["James Garfield","William McKinley","John Kennedy","Abraham Lincoln"], c: 0 },
-  { q: "What was the name of the first skyscraper (Chicago, 1884)?", a: ["Home Insurance Bldg","Empire State","Sears Tower","Flatiron"], c: 0 },
-  { q: "Who wrote 'A Tale of Two Cities' in 1859?", a: ["Charles Dickens","Mark Twain","Leo Tolstoy","Victor Hugo"], c: 0 },
-  { q: "Which empire was known as the 'Sick Man of Europe'?", a: ["Ottoman Empire","Austrian Empire","Russian Empire","Spanish Empire"], c: 0 },
-  { q: "What year did Queen Victoria celebrate her Diamond Jubilee?", a: ["1897","1887","1901","1837"], c: 0 },
-  { q: "Who developed the first polio vaccine later (but worked on bacteria in 1880s)?", a: ["Louis Pasteur","Robert Koch","Alexander Fleming","Edward Jenner"], c: 0 },
-  { q: "The Boxers in the 1900 Rebellion were from which country?", a: ["China","Japan","Korea","Vietnam"], c: 0 },
-  { q: "Which war was fought over 'Gold and Diamonds' in South Africa?", a: ["Boer War","Zulu War","Crimean War","Napoleonic War"], c: 0 },
-  { q: "Who published the 'Special Theory of Relativity' in 1905?", a: ["Albert Einstein","Niels Bohr","Isaac Newton","Stephen Hawking"], c: 0 },
-  { q: "What was the Victorian Era's primary fuel source?", a: ["Coal","Oil","Wood","Natural Gas"], c: 0 },
-  { q: "Which explorer 'found' Dr. Livingstone in 1871?", a: ["Henry Morton Stanley","Roald Amundsen","Robert Peary","Ernest Shackleton"], c: 0 },
-  { q: "The 1857 Indian Rebellion is also known as what?", a: ["Sepoy Mutiny","Opium War","Boxer Rebellion","Taiping Rebellion"], c: 0 },
-  { q: "Who wrote 'The Jungle Book' in 1894?", a: ["Rudyard Kipling","Lewis Carroll","Oscar Wilde","Robert Louis Stevenson"], c: 0 },
-  { q: "Which country was the first to give women the right to vote (1893)?", a: ["New Zealand","USA","UK","Finland"], c: 0 },
-  { q: "What year did the Titanic sink (just after our period)?", a: ["1912","1902","1922","1892"], c: 0 },
-  { q: "The 'Belle Époque' occurred primarily in which country?", a: ["France","Germany","USA","Russia"], c: 0 },
-  { q: "Who was the first person to reach the North Pole (1909)?", a: ["Robert Peary","Roald Amundsen","Robert Scott","Fridtjof Nansen"], c: 0 },
-  { q: "What was the US policy regarding trade with China (1899)?", a: ["Open Door Policy","Monroe Doctrine","Marshall Plan","Big Stick"], c: 0 },
-  { q: "Which nurse became famous during the Crimean War?", a: ["Florence Nightingale","Mary Seacole","Clara Barton","Edith Cavell"], c: 0 },
-  { q: "What was the name of the steamship that won the Blue Riband in 1907?", a: ["Mauretania","Lusitania","Titanic","Olympic"], c: 0 },
-  { q: "Who was the leader of the Bolsheviks by 1903?", a: ["Vladimir Lenin","Leon Trotsky","Joseph Stalin","Nicholas II"], c: 0 },
-  { q: "Which US President was known for 'Trust Busting' and the Big Stick?", a: ["Theodore Roosevelt","William Taft","Woodrow Wilson","McKinley"], c: 0 },
-  { q: "Who wrote 'War and Peace' in 1869?", a: ["Leo Tolstoy","Fyodor Dostoevsky","Anton Chekhov","Maxim Gorky"], c: 0 },
-  { q: "The Eiffel Tower was built for which event in 1889?", a: ["World's Fair","Olympic Games","Centennial of Revolution","Victory Parade"], c: 2 },
-  { q: "Who invented the first motion picture camera (Kinetoscope)?", a: ["Thomas Edison","Lumière Brothers","Georges Méliès","Charlie Chaplin"], c: 0 },
-  { q: "Which 1850 agreement postponed the American Civil War?", a: ["Compromise of 1850","Kansas-Nebraska Act","Missouri Compromise","Fugitive Slave Act"], c: 0 },
-  { q: "What was the name of the first operational submarine (1864)?", a: ["H.L. Hunley","Nautilus","U-1","Turtle"], c: 0 },
-  { q: "Who was the last Emperor of Russia (crowned 1894)?", a: ["Nicholas II","Alexander III","Peter the Great","Ivan the Terrible"], c: 0 }
-];
+  const firebaseConfig = {
+    apiKey: "AIzaSyDW-UE-a4TMRcfz3E13mLOgBtx6bywwCtE",
+    authDomain: "history-780ec.firebaseapp.com",
+    databaseURL: "https://history-780ec-default-rtdb.firebaseio.com",
+    projectId: "history-780ec",
+    storageBucket: "history-780ec.firebasestorage.app",
+    messagingSenderId: "426243337205",
+    appId: "1:426243337205:web:fc7f097a6fa0497297cebc",
+    measurementId: "G-Q1Z3N3BSVB"
+  };
 
-let state = { isHost: false, myId: 'p' + Date.now(), roomCode: '', currentQ: -1, score: 0, timeLimit: 20, maxQ: 10 };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+  const QUESTIONS = [
+    { year: 1853, hint: "A commodore from the United States sailed into a Japanese harbour with steam-powered 'Black Ships'.", question: "Which American Commodore forced Japan to open its ports to trade in 1853?", answers: ["Matthew Perry","John Paul Jones","David Farragut","Winfield Scott"], correct: 0, fact: "Commodore Perry's fleet arrived in Uraga Harbour with four warships." },
+    { year: 1859, hint: "A quiet naturalist published a book that would overturn centuries of thinking about life.", question: "What was the title of Charles Darwin's landmark 1859 work?", answers: ["On the Origin of Species","The Descent of Man","Principles of Geology","The Voyage of the Beagle"], correct: 0, fact: "On the Origin of Species sold out on its first day of publication." },
+    { year: 1861, hint: "When Confederate artillery opened fire on a Union garrison in a South Carolina harbour.", question: "Which fort's bombardment in 1861 officially began the American Civil War?", answers: ["Fort Sumter","Fort McHenry","Fort Donelson","Fort Monroe"], correct: 0, fact: "The bombardment began on April 12, 1861." },
+    { year: 1865, hint: "An actor slipped into a theatre box during a comedy performance in Washington D.C.", question: "Who assassinated U.S. President Abraham Lincoln in 1865?", answers: ["John Wilkes Booth","Charles Guiteau","Leon Czolgosz","Jesse James"], correct: 0, fact: "John Wilkes Booth shot Lincoln at Ford's Theatre." },
+    { year: 1869, hint: "When a golden spike was driven at Promontory Summit in Utah Territory.", question: "What was completed at Promontory Summit in 1869?", answers: ["The First Transcontinental Railroad","The Erie Canal expansion","The Panama Railway","The Suez Canal"], correct: 0, fact: "The golden spike was driven on May 10, 1869." },
+    { year: 1871, hint: "A king was proclaimed ruler of a unified nation in the Hall of Mirrors.", question: "In which palace was the German Empire proclaimed in 1871?", answers: ["Palace of Versailles","Charlottenburg Palace","Schönbrunn Palace","The Louvre"], correct: 0, fact: "King Wilhelm I of Prussia was proclaimed Emperor at Versailles." },
+    { year: 1876, hint: "A Scottish-born inventor spoke the first words over a wire: 'Mr. Watson, come here.'", question: "Who invented the telephone in 1876?", answers: ["Alexander Graham Bell","Thomas Edison","Nikola Tesla","Elisha Gray"], correct: 0, fact: "Bell was granted the patent on March 7, 1876." },
+    { year: 1879, hint: "An inventor finally produced a glass globe that could glow steadily for 14.5 hours.", question: "Who developed a practical incandescent light bulb in 1879?", answers: ["Thomas Edison","Nikola Tesla","Humphry Davy","Joseph Swan"], correct: 0, fact: "Edison used a carbonized bamboo filament." },
+    { year: 1885, hint: "A French gift arrived in crates — 350 individual pieces — assembled in New York.", question: "The Statue of Liberty was dedicated in which year?", answers: ["1886","1885","1876","1889"], correct: 0, fact: "The Statue of Liberty was dedicated on October 28, 1886." },
+    { year: 1888, hint: "A solitary Dutch painter worked at a furious pace before cutting off part of his own ear.", question: "Which artist famously cut off his ear in 1888?", answers: ["Vincent van Gogh","Paul Gauguin","Paul Cézanne","Georges Seurat"], correct: 0, fact: "Van Gogh severed his left ear after an argument." },
+    { year: 1896, hint: "Athletes from 14 nations gathered in a Mediterranean city, reviving a tradition.", question: "Where were the first modern Olympic Games held in 1896?", answers: ["Athens, Greece","Paris, France","London, England","Rome, Italy"], correct: 0, fact: "The Games featured 241 athletes from 14 nations." },
+    { year: 1903, hint: "Two brothers from Ohio achieved 12 seconds of powered, controlled flight.", question: "Which brothers made the first airplane flight at Kitty Hawk in 1903?", answers: ["Orville & Wilbur Wright","Louis & Jacques Blériot","Samuel & Henry Langley","Glenn & Alexander Curtiss"], correct: 0, fact: "The Wright Brothers made four flights on Dec 17, 1903." },
+    { year: 1906, hint: "At 5:12 in the morning, the earth shook violently beneath a great Pacific coast city.", question: "Which major city was devastated by an earthquake in 1906?", answers: ["San Francisco","Los Angeles","Seattle","Portland"], correct: 0, fact: "The 1906 San Francisco earthquake had a magnitude of 7.9." }
+  ];
 
-function createRoom() {
-  const name = document.getElementById('host-name-input').value || 'Host';
-  state.roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-  state.timeLimit = parseInt(document.getElementById('setting-time').value);
-  state.maxQ = parseInt(document.getElementById('setting-q-count').value);
-  state.isHost = true;
-
-  // Initialize room with settings
-  db.ref('rooms/' + state.roomCode).set({
-    status: 'lobby',
+  let state = {
+    isHost: false,
+    myName: '',
+    roomCode: '',
+    myId: 'p' + Math.random().toString(36).substr(2, 9),
+    myScore: 0,
     currentQ: 0,
-    timeLimit: state.timeLimit,
-    maxQ: state.maxQ,
-    players: { [state.myId]: { name: name, score: 0 } }
-  }).then(() => {
-    document.getElementById('display-room-code').textContent = state.roomCode;
-    document.getElementById('start-btn').style.display = 'block';
-    document.getElementById('wait-msg').style.display = 'none';
+    answered: false,
+    timer: 20
+  };
+
+  window.showScreen = (id) => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  };
+
+  window.createRoom = async () => {
+    const name = document.getElementById('host-name-input').value || 'Host';
+    const code = Math.random().toString(36).substr(2, 4).toUpperCase();
+    state.isHost = true;
+    state.roomCode = code;
+    state.myName = name;
+    
+    await set(ref(db, 'rooms/' + code), {
+      status: 'lobby',
+      currentQ: 0,
+      hostId: state.myId,
+      players: { [state.myId]: { name, score: 0 } }
+    });
+
+    document.getElementById('display-room-code').textContent = code;
+    listenToRoom(code);
     showScreen('lobby-screen');
-    listenToRoom();
-  }).catch(err => alert("Firebase Error: Check your config or rules."));
-}
+  };
 
-function joinRoom() {
-  const code = document.getElementById('join-code-input').value.toUpperCase();
-  const name = document.getElementById('join-name-input').value || 'Player';
-  
-  db.ref('rooms/' + code).once('value', (snap) => {
-    if (snap.exists()) {
-      state.roomCode = code;
-      db.ref('rooms/' + code + '/players/' + state.myId).set({ name: name, score: 0 });
-      document.getElementById('display-room-code').textContent = code;
-      showScreen('lobby-screen');
-      listenToRoom();
-    } else {
-      alert("Room Not Found! Ask the host for the correct code.");
-    }
-  });
-}
+  window.joinRoom = async () => {
+    const name = document.getElementById('join-name-input').value || 'Player';
+    const code = document.getElementById('join-code-input').value.toUpperCase();
+    
+    const snapshot = await get(ref(db, `rooms/${code}`));
+    if (!snapshot.exists()) return alert("Room not found!");
 
-function listenToRoom() {
-  db.ref('rooms/' + state.roomCode).on('value', (snap) => {
-    const data = snap.val();
-    if (!data) return;
+    state.roomCode = code;
+    state.myName = name;
+    await set(ref(db, `rooms/${code}/players/${state.myId}`), { name, score: 0 });
 
-    // Sync Lobby Settings
-    state.timeLimit = data.timeLimit;
-    state.maxQ = data.maxQ;
-    document.getElementById('lobby-settings-display').innerHTML = 
-      `QUIZ SETTINGS: ${state.maxQ} Questions | ${state.timeLimit}s Each`;
+    document.getElementById('waiting-room-code').textContent = code;
+    listenToRoom(code);
+    showScreen('waiting-screen');
+  };
 
-    // Update Player Lists
-    const pList = Object.values(data.players || {}).map(p => `<li>${p.name} <span>${p.score} pts</span></li>`).join('');
-    if(document.getElementById('player-list')) document.getElementById('player-list').innerHTML = pList;
-    if(document.getElementById('lb-list')) document.getElementById('lb-list').innerHTML = pList;
+  function listenToRoom(code) {
+    onValue(ref(db, 'rooms/' + code), (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
 
-    // Handle State Transitions
-    if (data.status === 'question' && state.currentQ !== data.currentQ) {
-      state.currentQ = data.currentQ;
-      loadQuestion();
-    }
-    if (data.status === 'leaderboard') {
-      showScreen('leaderboard-screen');
-      document.getElementById('next-btn').style.display = state.isHost ? 'block' : 'none';
-      if (state.currentQ + 1 >= state.maxQ) {
-        document.getElementById('next-btn').textContent = "End Game";
+      // Update Player Lists
+      const playerArr = Object.values(data.players || {});
+      const listHtml = playerArr.map(p => `<li><div class="player-avatar">${p.name[0]}</div>${p.name}</li>`).join('');
+      if (document.getElementById('lobby-player-list')) document.getElementById('lobby-player-list').innerHTML = listHtml;
+      if (document.getElementById('waiting-player-list')) document.getElementById('waiting-player-list').innerHTML = listHtml;
+
+      // Handle Game States
+      if (data.status === 'question' && state.currentQ !== data.currentQ || (data.status === 'question' && !state.answered)) {
+        state.currentQ = data.currentQ;
+        loadQuestion(data.currentQ);
+      } else if (data.status === 'leaderboard') {
+        showLeaderboard(playerArr);
       }
-    }
-  });
-}
+    });
+  }
 
-function startGame() {
-  db.ref('rooms/' + state.roomCode).update({ status: 'question', currentQ: 0 });
-}
+  window.startGame = () => {
+    update(ref(db, `rooms/${state.roomCode}`), { status: 'question', currentQ: 0 });
+  };
 
-function loadQuestion() {
-  const q = QUESTIONS[state.currentQ];
-  document.getElementById('q-count').textContent = "Q " + (state.currentQ + 1) + " / " + state.maxQ;
-  document.getElementById('q-text').textContent = q.q;
-  
-  const grid = document.getElementById('answers-grid');
-  grid.innerHTML = q.a.map((ans, i) => `<button class="answer-btn" onclick="submitAns(${i})">${ans}</button>`).join('');
+  function loadQuestion(idx) {
+    const q = QUESTIONS[idx];
+    state.answered = false;
+    state.timer = 20;
+    
+    document.getElementById('q-progress').textContent = `Q ${idx + 1} / ${QUESTIONS.length}`;
+    document.getElementById('hint-text').textContent = q.hint;
+    document.getElementById('question-text').textContent = q.question;
+    document.getElementById('fact-reveal').style.display = 'none';
+    document.getElementById('feedback-overlay').classList.remove('show');
 
-  const bar = document.getElementById('timer-bar');
-  bar.style.transition = 'none'; bar.style.width = '100%';
-  setTimeout(() => { 
-    bar.style.transition = `width ${state.timeLimit}s linear`; 
-    bar.style.width = '0%'; 
-  }, 100);
+    const grid = document.getElementById('answers-grid');
+    grid.innerHTML = q.answers.map((ans, i) => `
+      <button class="answer-btn" onclick="submitAnswer(${i})">
+        <span class="answer-letter">${['A','B','C','D'][i]}</span> ${ans}
+      </button>
+    `).join('');
 
-  showScreen('game-screen');
-}
-
-function submitAns(idx) {
-  const correct = idx === QUESTIONS[state.currentQ].c;
-  if (correct) state.score += 100;
-  
-  document.getElementById('my-score').textContent = state.score + " pts";
-  db.ref('rooms/' + state.roomCode + '/players/' + state.myId).update({ score: state.score });
-
-  document.querySelectorAll('.answer-btn').forEach((b, i) => {
-    b.disabled = true;
-    if (i === QUESTIONS[state.currentQ].c) b.classList.add('correct');
-    else if (i === idx) b.classList.add('wrong');
-  });
-
-  if (state.isHost) {
+    // Reset Timer Bar
+    const bar = document.getElementById('timer-bar');
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
     setTimeout(() => {
-      db.ref('rooms/' + state.roomCode).update({ status: 'leaderboard' });
-    }, 2500);
-  }
-}
+      bar.style.transition = 'width 20s linear';
+      bar.style.width = '0%';
+    }, 50);
 
-function nextQuestion() {
-  const next = state.currentQ + 1;
-  if (next < state.maxQ && next < QUESTIONS.length) {
-    db.ref('rooms/' + state.roomCode).update({ status: 'question', currentQ: next });
-  } else {
-    alert("Game Complete! Final standings shown on leaderboard.");
+    showScreen('game-screen');
   }
-}
+
+  window.submitAnswer = (idx) => {
+    if (state.answered) return;
+    state.answered = true;
+    
+    const q = QUESTIONS[state.currentQ];
+    const isCorrect = idx === q.correct;
+    if (isCorrect) state.myScore += 100;
+
+    // Show feedback
+    const fb = document.getElementById('feedback-overlay');
+    fb.textContent = isCorrect ? "CORRECT!" : "INCORRECT";
+    fb.className = `feedback-overlay show ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+    
+    const btns = document.querySelectorAll('.answer-btn');
+    btns.forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.correct) b.classList.add('correct');
+        else if (i === idx) b.classList.add('wrong');
+    });
+
+    document.getElementById('fact-reveal').innerHTML = q.fact;
+    document.getElementById('fact-reveal').style.display = 'block';
+    document.getElementById('my-score').textContent = state.myScore + ' pts';
+
+    // Update Firebase
+    update(ref(db, `rooms/${state.roomCode}/players/${state.myId}`), { score: state.myScore });
+
+    if (state.isHost) {
+      setTimeout(() => {
+        update(ref(db, `rooms/${state.roomCode}`), { status: 'leaderboard' });
+      }, 4000);
+    }
+  };
+
+  function showLeaderboard(players) {
+    const sorted = [...players].sort((a,b) => b.score - a.score);
+    const list = document.getElementById('lb-list');
+    list.innerHTML = sorted.map((p, i) => `
+      <li class="lb-item">
+        <span class="lb-rank">${i+1}</span>
+        <span class="lb-name">${p.name}</span>
+        <span class="lb-score">${p.score} pts</span>
+      </li>
+    `).join('');
+
+    if (state.isHost) {
+      document.getElementById('lb-host-controls').style.display = 'block';
+    }
+    showScreen('leaderboard-screen');
+  }
+
+  window.nextQuestion = () => {
+    const nextIdx = state.currentQ + 1;
+    if (nextIdx < QUESTIONS.length) {
+      update(ref(db, `rooms/${state.roomCode}`), { status: 'question', currentQ: nextIdx });
+    } else {
+      alert("Game Over!");
+    }
+  };
+
 </script>
 </body>
 </html>
